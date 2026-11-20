@@ -1,0 +1,124 @@
+### Pruebas manuales con REST Client (VS Code)
+### Da clic en "Send Request" sobre cada petición.
+### REST Client guarda la cookie de sesión automáticamente entre peticiones.
+
+@api = http://localhost:3000/api
+
+### 1. Login como Admin
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "username": "Admin", "password": "$3cr3t" }
+
+### 2. ¿Quién soy?
+GET {{api}}/auth/me
+
+### 3. Resumen para la pantalla de inicio
+GET {{api}}/resumen
+
+### ---------------- Catálogos ----------------
+
+### Listar alumnos
+GET {{api}}/alumnos
+
+### Listar maestros
+GET {{api}}/maestros
+
+### Listar materias
+GET {{api}}/materias
+
+### Listar grupos
+GET {{api}}/grupos
+
+### Crear maestro
+POST {{api}}/maestros
+Content-Type: application/json
+
+{
+  "nombre": "Jorge",
+  "apellidos": "Salas Medina",
+  "email": "jorge.salas@escuela.local",
+  "telefono": "6679876543",
+  "especialidad": "Física"
+}
+
+### Actualizar maestro 1
+PUT {{api}}/maestros/1
+Content-Type: application/json
+
+{
+  "nombre": "Laura",
+  "apellidos": "Hernández Ruiz",
+  "email": "laura.hernandez@escuela.local",
+  "telefono": "6671234567",
+  "especialidad": "Matemáticas aplicadas"
+}
+
+### Eliminar maestro 1 (debe fallar con 409: tiene materias)
+DELETE {{api}}/maestros/1
+
+### Crear alumno
+POST {{api}}/alumnos
+Content-Type: application/json
+
+{
+  "matricula": "A2026099",
+  "nombre": "Lucía",
+  "apellidos": "Ríos Campos",
+  "email": "lucia.rios@alumnos.local",
+  "fecha_nacimiento": "2007-05-10",
+  "grupo_id": 1,
+  "materia_id": 2
+}
+
+### ---------------- Usuarios (solo admin) ----------------
+
+### Listar usuarios
+GET {{api}}/usuarios
+
+### Crear usuario (intenta escalar a admin: se crea como "usuario")
+POST {{api}}/usuarios
+Content-Type: application/json
+
+{
+  "nombre": "María López",
+  "username": "mlopez",
+  "email": "mlopez@escuela.local",
+  "password": "Maria#2026",
+  "rol": "admin"
+}
+
+### Contraseña débil (400)
+POST {{api}}/usuarios
+Content-Type: application/json
+
+{ "nombre": "Débil", "username": "debil", "password": "123" }
+
+### Intentar borrar a Root (403: administradores protegidos)
+DELETE {{api}}/usuarios/2
+
+### ---------------- Seguridad ----------------
+
+### Inyección SQL en el login (401)
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "username": "' OR '1'='1", "password": "' OR '1'='1" }
+
+### Login como mlopez (usuario normal)
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "username": "mlopez", "password": "Maria#2026" }
+
+### Como mlopez: listar usuarios (403)
+GET {{api}}/usuarios
+
+### Cambiar mi contraseña
+PUT {{api}}/auth/me/password
+Content-Type: application/json
+
+{ "actual": "Maria#2026", "nueva": "Maria#2027" }
+
+### Cerrar sesión
+POST {{api}}/auth/logout
